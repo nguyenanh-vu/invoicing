@@ -1,0 +1,28 @@
+[DEFAULT]
+
+# folder.workspace =
+# folder.model =
+# folder.log =
+# folder.output =
+
+[input.google]
+
+# path.token =
+path.credentials =
+cell.date =
+cell.promotion.name =
+cell.promotion.value =
+column.order_id =
+column.client =
+column.delivery_point =
+column.consignes =
+column.sales =
+column.last =
+line.names =
+line.price =
+line.orders =
+line.last =
+
+[output.latex]
+# model.path = 
+# model.line =
