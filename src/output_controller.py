@@ -1,6 +1,7 @@
 import configparser
 import os
 import subprocess
+import logging
 from typing import List, Optional
 
 import orders
@@ -9,6 +10,7 @@ import tokens
 import constants
 
 
+LOGGER = logging.getLogger(__name__)
 DEFAULT_LATEX_MODEL_PATH = "invoice.tex.template"
 DEFAULT_LATEX_ITEM_LINE_MODEL = "&".join([
     tokens.NAME.get_label(),
@@ -16,6 +18,7 @@ DEFAULT_LATEX_ITEM_LINE_MODEL = "&".join([
     tokens.PRICE.get_label(),
     tokens.AMOUNT.get_label()
 ]) + "\\\\"
+
 
 class Output_Controller:
 
@@ -86,7 +89,9 @@ class PDFViaTex(Output_Controller):
 
     def save(self, order : orders.Order, name : str, folder: str) -> None:
 
+        LOGGER.info("generating PDF with LaTex for order %s", order.order_id)
         folder_path = self.get_folder(folder, order)
+        LOGGER.info("output folder : %s", folder_path)
         if os.path.exists(folder_path):
             if not os.path.isdir(folder_path):
                 raise NotADirectoryError("output folder {} already exists and is not a folder".format(folder_path))
@@ -100,11 +105,15 @@ class PDFViaTex(Output_Controller):
             model = self.get_default_model()
             line_model = DEFAULT_LATEX_ITEM_LINE_MODEL
 
+        LOGGER.debug("path to model %s", model)
+        LOGGER.debug("line model: %s", line_model)
+
         filename = self.get_filename(name, order)
         infile = os.path.join(folder_path, filename + '.tex')
         logfile = os.path.join(folder_path, filename + '.log')
         auxfile = os.path.join(folder_path, filename + '.aux')
         outfile = os.path.join(folder_path, filename + '.out')
+        LOGGER.info("output file : %s", outfile)
 
         data = ""
 
@@ -135,6 +144,7 @@ class PDFViaTex(Output_Controller):
         with open(infile, 'w', encoding="utf-8") as f:
             f.write(data)
 
+        LOGGER.info("LaTex file created in %s", infile)
         cmd = ['pdflatex', '-interaction', 'nonstopmode', '-output-directory', folder_path, infile]
         proc = subprocess.Popen(cmd, stdout=open(os.devnull, 'wb'))
         proc.communicate()
@@ -143,6 +153,7 @@ class PDFViaTex(Output_Controller):
         if not retcode == 0:
             os.unlink(auxfile)
             os.unlink(outfile)
+            LOGGER.error("Error generating pdf, check %s for more information", logfile)
             raise ValueError('Error {} executing command: {}'.format(retcode, ' '.join(cmd))) 
 
         try:
@@ -152,6 +163,7 @@ class PDFViaTex(Output_Controller):
             os.unlink(infile)
         except:
             return
+        LOGGER.info("successfully generated PDF with LaTex for order %s", order.order_id)
 
     def get_default_model(self) -> str:
         return os.path.join(self.ws.model, DEFAULT_LATEX_MODEL_PATH)
@@ -169,5 +181,6 @@ def get_output_controller(config : configparser.ConfigParser, ws : workspace.Wor
     res = []
     for controller in ALL:
         if config.has_section(controller.get_config_title()):
+            LOGGER.info("using output controller %s", controller.__name__)
             res.append(controller(config[controller.get_config_title()], ws))
     return res

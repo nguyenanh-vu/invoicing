@@ -1,6 +1,7 @@
 import configparser
 from numbers import Number
 import os
+import logging
 
 from typing import Any, List, Optional
 
@@ -16,6 +17,9 @@ import workspace
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 DEFAULT_TOKEN_NAME = "token.json"
 DEFAULT_CREDENTIALS_NAME = "key.json"
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Input_Item:
@@ -50,11 +54,25 @@ class GoogleSheetsInput(Input_Controller):
 
     def read(self) -> List[orders.Order]:
 
-        self.check_config()
+        try:
+            self.check_config()
+        except Exception as e:
+            LOGGER.error("error input checking configuration%s", GoogleSheetsInput.get_config_title())
+            raise e
+        LOGGER.debug("successfully checked config %s", GoogleSheetsInput.get_config_title())
 
-        creds = self.get_credentials()
+        creds : Credentials
+        try:
+            creds = self.get_credentials()
+        except Exception as e:
+            LOGGER.error("error checking credentials")
+            raise e
 
+        LOGGER.debug("requesting date cell")
         date = self.request(creds, self.config.get("cell.date"))[0][0]
+        LOGGER.debug("order date: %s", date)
+
+        LOGGER.debug("requesting promotion cells")
         promotion_name = self.request(creds, self.config.get("cell.promotion.name"))[0][0]
         promotion_value = self.request(creds, self.config.get("cell.promotion.value"))[0][0]
 
@@ -62,10 +80,18 @@ class GoogleSheetsInput(Input_Controller):
         if promotion_name and promotion_value:
             try:
                 promotion : orders.Promotion = orders.Promotion(promotion_name, int(promotion_value))
+                LOGGER.info("order promotion %s", promotion.__str__())
             except:
                 pass
 
         items, consigns = self.read_items(creds)
+        LOGGER.info("found %d items, %d consigns", len(items), len(consigns))
+        LOGGER.debug("items:")
+        for i in items:
+            LOGGER.debug(i)
+        LOGGER.debug("consigns:")
+        for i in consigns:
+            LOGGER.debug(i)
 
         orders_table = self.request(creds, "A{}:{}{}".format(
             self.config.get("line.orders"),
@@ -86,6 +112,7 @@ class GoogleSheetsInput(Input_Controller):
                 client = line[client_column]
                 if order_id and client:
 
+                    LOGGER.debug("filling order %s", order_id)
                     order : orders.Order = orders.Order()
                     order.promotion = promotion
                     order.order_id = order_id
@@ -109,8 +136,11 @@ class GoogleSheetsInput(Input_Controller):
                                 order.consigns.append(item)
                             except:
                                 pass
+                    LOGGER.debug("Order %s: %s: %s: %s, %d items, %d consignes, %d total", 
+                                 order_id, client, date, promotion.__str__(),
+                                 len(order.items), len(order.consigns), order.get_total_all())
                     res.append(order)
-
+        LOGGER.info("found %d orders", len(res))
         return res
 
     def get_config_title() -> str:
@@ -140,11 +170,15 @@ class GoogleSheetsInput(Input_Controller):
         for arg in args:
             if arg not in self.config or not self.config.get(arg, None):
                 raise KeyError("config missing key " + arg)
+            else:
+                LOGGER.debug("argument %s = %s", arg, self.config.get(arg))
 
     def get_credentials(self) -> Credentials:
         
         credential_path = self.config.get("path.credentials", os.path.join(self.ws.key, DEFAULT_CREDENTIALS_NAME))
         token_path = self.config.get("path.token", os.path.join(self.ws.key, DEFAULT_TOKEN_NAME))
+        LOGGER.debug("credential_path: %s", credential_path)
+        LOGGER.debug("token_path: %s", token_path)
         if not os.path.exists(credential_path):
             raise FileNotFoundError("Google OAuth2 token {} not found".format(credential_path))
 
@@ -154,10 +188,12 @@ class GoogleSheetsInput(Input_Controller):
         # time.
         if os.path.exists(token_path):
             creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+            LOGGER.debug("found connection token")
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
+                LOGGER.info("refreshed connection token")
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
                     credential_path, SCOPES
@@ -173,7 +209,8 @@ class GoogleSheetsInput(Input_Controller):
 
     def request(self, creds : Credentials, range : str) -> Any:
 
-        service = build("sheets", "v4", credentials=creds)
+        LOGGER.debug("requesting range : %s", range)
+        service = build("sheets", "v4", credentials=creds, cache_discovery=False)
         # Call the Sheets API
         sheet = service.spreadsheets()
 
@@ -183,7 +220,9 @@ class GoogleSheetsInput(Input_Controller):
             .execute()
         )
 
-        return result.get("values", [])
+        values = result.get("values", [])
+        LOGGER.debug("got result, size %d", len(values))
+        return values
 
     def read_items(self, creds : Credentials) -> tuple[List[Input_Item],List[Input_Item]]:
 
@@ -224,5 +263,6 @@ ALL = [
 def get_input_controller(input : str, config : configparser.ConfigParser, ws : workspace.Workspace) -> Optional[Input_Controller]:
     for controller in ALL:
         if config.has_section(controller.get_config_title()):
+            LOGGER.info("using input controller %s", controller.__name__)
             return controller(input, config[controller.get_config_title()], ws)
     return None

@@ -11,6 +11,16 @@
 # format.time =
 # format.datetime =
 
+[logging]
+
+# format.log =
+# format.path =
+# console.level =
+# console.format =
+# file.disabled =
+# file.level =
+# file.format =
+
 [input.google]
 
 # path.token =

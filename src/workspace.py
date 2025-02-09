@@ -32,9 +32,9 @@ class Workspace:
     def edit_path(self, path : str) -> str:
 
         res = path
-        res = tokens.DATE.replace_data(self.config.get("format.date", constants.DEFAULT_DATE_FORMAT))
-        res = tokens.TODAY.replace_data(self.config.get("format.datetime", constants.DEFAULT_DATETIME_FORMAT))
-        res = tokens.TIME.replace_data(self.config.get("format.time", constants.DEFAULT_TIME_FORMAT))
+        res = tokens.DATE.replace_data(res, self.config.get("format.date", constants.DEFAULT_DATE_FORMAT))
+        res = tokens.TODAY.replace_data(res, self.config.get("format.datetime", constants.DEFAULT_DATETIME_FORMAT))
+        res = tokens.TIME.replace_data(res, self.config.get("format.time", constants.DEFAULT_TIME_FORMAT))
 
         return res
 

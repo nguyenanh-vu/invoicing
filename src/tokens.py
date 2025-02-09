@@ -2,6 +2,8 @@ import datetime
 from typing import Callable, Optional
 
 import orders
+import constants
+import __version__
 
 
 DEFAULT_BEGIN_TAG = "<<"
@@ -25,7 +27,19 @@ class Token:
         return data.replace( self.get_label(begin_tag, end_tag), content )
 
 
-class General_Token(Token):
+class Single_Value_Token(Token):
+
+    def __init__(self, name : str, value : str):
+        super().__init__(name)
+        self.value = value
+
+    def replace_data(self, data : str, 
+                begin_tag : Optional[str] = DEFAULT_BEGIN_TAG, 
+                end_tag : Optional[str] = DEFAULT_END_TAG) -> str :
+        return self.replace(data, self.value, begin_tag, end_tag)
+
+
+class String_Token(Token):
 
     def __init__(self, name : str, func : Callable[[Optional[str]], str]):
         super().__init__(name)
@@ -40,7 +54,7 @@ class General_Token(Token):
         return self.replace(data, self.func(input), begin_tag, end_tag)
 
 
-class Time_Token(General_Token):
+class Time_Token(String_Token):
 
     def __init__(self, name : str):
         super().__init__(name, lambda s : datetime.datetime.now().strftime(s))
@@ -77,6 +91,7 @@ class Item_Token(Token):
 
 
 AMOUNT = Item_Token("AMOUNT", lambda i : str(i.amount))
+APP_NAME = Single_Value_Token("APP_NAME", constants.APP_NAME)
 CONSIGNS = Token("CONSIGNS")
 CLIENT = Order_Token("CLIENT", lambda o : o.client)
 DATE = Time_Token("DATE")
@@ -95,3 +110,4 @@ TO_PAY = Order_Token("TO_PAY", lambda o : str(o.get_to_pay()))
 TOTAL = Order_Token("TOTAL", lambda o : str(o.get_total_all())) 
 TOTAL_CONSIGNS = Order_Token("TOTAL_CONSIGNS", lambda o : str(o.get_total_consigns()))
 TOTAL_SALES = Order_Token("TOTAL_SALES", lambda o : str(o.get_total_price()))
+VERSION = Single_Value_Token("VERSION", __version__.__version__)
