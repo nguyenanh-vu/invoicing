@@ -2,13 +2,19 @@
 
 # folder.workspace =
 # folder.model =
-# folder.log =
+# folder.logs =
 # folder.output =
+# folder.input =
+# folder.key =
+# format.path =
+# format.date =
+# format.time =
+# format.datetime =
 
 [input.google]
 
 # path.token =
-path.credentials =
+# path.credentials =
 cell.date =
 cell.promotion.name =
 cell.promotion.value =
@@ -26,3 +32,5 @@ line.last =
 [output.latex]
 # model.path = 
 # model.line =
+# format.path =
+# format.folder.output =
