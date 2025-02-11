@@ -148,8 +148,11 @@ class PDFViaTex(Output_Controller):
 
         retcode = proc.returncode
         if not retcode == 0:
-            os.unlink(auxfile)
-            os.unlink(outfile)
+            try:
+                os.unlink(auxfile)
+                os.unlink(outfile)
+            except:
+                pass
             LOGGER.error("Error generating pdf, check %s for more information", logfile)
             raise ValueError('Error {} executing command: {}'.format(retcode, ' '.join(cmd)))
 
@@ -159,7 +162,7 @@ class PDFViaTex(Output_Controller):
             os.unlink(outfile)
             os.unlink(infile)
         except:
-            return
+            pass
         LOGGER.info("successfully generated PDF with LaTex for order %s", order.order_id)
 
     def get_default_model(self) -> str:

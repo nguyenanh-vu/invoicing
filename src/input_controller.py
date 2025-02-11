@@ -7,6 +7,7 @@ from typing import Any, List, Optional
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 import invoicing.orders as orders
@@ -212,15 +213,19 @@ class GoogleSheetsInput(Input_Controller):
     def request(self, range: str) -> Any:
 
         LOGGER.debug("requesting range: %s", range)
-        service = build("sheets", "v4", credentials=self.creds, cache_discovery=False)
-        # Call the Sheets API
-        sheet = service.spreadsheets()
+        try:
+            service = build("sheets", "v4", credentials=self.creds, cache_discovery=False)
+            # Call the Sheets API
+            sheet = service.spreadsheets()
 
-        result = (
-            sheet.values()
-            .get(spreadsheetId=self.input, range=range)
-            .execute()
-        )
+            result = (
+                sheet.values()
+                .get(spreadsheetId=self.input, range=range)
+                .execute()
+            )
+        except HttpError as e:
+            LOGGER.error("error getting data:")
+            raise e
 
         values = result.get("values", [])
         LOGGER.debug("got result, size %d", len(values))
