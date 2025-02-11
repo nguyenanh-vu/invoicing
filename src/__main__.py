@@ -20,14 +20,20 @@ DEFAULT_LOGGER = logging.getLogger(constants.APP_NAME)
 def main():
 
     parser = argparse.ArgumentParser(prog=constants.APP_NAME)
-    parser.add_argument('-c', '--config', help='path to config file')
-    parser.add_argument('-i', '--input', help='name of input', required=True)
-    parser.add_argument('-v', '--verbose', help='set console log to INFO', action='store_true')
-    parser.add_argument('-d', '--debug', help='set console and file log to DEBUG', action='store_true')
-    
+    parser.add_argument('-c', '--config',
+                        help='path to config file')
+    parser.add_argument('-i', '--input',
+                        help='name of input', required=True)
+    parser.add_argument('-v', '--verbose',
+                        help='set console log to INFO',
+                        action='store_true')
+    parser.add_argument('-d', '--debug',
+                        help='set console and file log to DEBUG',
+                        action='store_true')
+
     args, _ = parser.parse_known_args()
-    debug : bool = args.debug
-    verbose : bool = args.verbose
+    debug: bool = args.debug
+    verbose: bool = args.verbose
 
     config_path = os.path.join(constants.CONFIG_FOLDER, 'conf.ini')
     if args.config is not None:
@@ -39,7 +45,7 @@ def main():
 
     config = configparser.ConfigParser()
 
-    try: 
+    try:
         with open(config_path, 'r') as f:
             config.read_file(f)
     except Exception as e:
@@ -47,17 +53,16 @@ def main():
         DEFAULT_LOGGER.error(e, stack_info=True)
         return
 
-
-    ws : workspace.Workspace
-    try: 
+    ws: workspace.Workspace
+    try:
         ws = workspace.Workspace(config["DEFAULT"])
     except Exception as e:
         DEFAULT_LOGGER.error("error instantiating workspace")
         DEFAULT_LOGGER.error(e, stack_info=True)
         return
 
-    log_path : str
-    try: 
+    log_path: Optional[str]
+    try:
         log_path = setup_logging(config, debug, verbose, ws)
     except Exception as e:
         DEFAULT_LOGGER.error("error setting up logging")
@@ -65,7 +70,7 @@ def main():
         return
     logger = logging.getLogger(constants.APP_NAME)
     logger.info("%s %s started", constants.APP_NAME,  __version__.__version__)
-    logger.info("Python version : %s", sys.version)
+    logger.info("Python version: %s", sys.version)
     logger.info("configuration file path: %s", config_path)
     logger.info("input: %s", input_name)
     logger.info("verbose: %s", str(verbose))
@@ -83,12 +88,12 @@ def main():
 
     if input is None:
         raise KeyError("No input configuration present")
-    
+
     outputs = output_controller.get_output_controller(config, ws)
     if len(outputs) == 0:
         raise KeyError("No output configuration present")
-    
-    res : List[orders.Order] = input.read()
+
+    res: List[orders.Order] = input.read()
 
     for order in res:
         for output in outputs:
@@ -98,14 +103,14 @@ def main():
                 logger.exception(e)
 
 
-def setup_logging(config : configparser.ConfigParser,
-                  debug : bool, verbose : bool,
-                  ws : workspace.Workspace) -> Optional[str]:
+def setup_logging(config: configparser.ConfigParser,
+                  debug: bool, verbose: bool,
+                  ws: workspace.Workspace) -> Optional[str]:
 
-    handlers : List[logging.Handler] = []
+    handlers: List[logging.Handler] = []
 
     datefmt = constants.DEFAULT_LOG_DATE_FORMAT
-    fmt : str = constants.DEFAULT_LOG_FORMAT
+    fmt: str = constants.DEFAULT_LOG_FORMAT
     console_fmt = constants.DEFAULT_LOG_FORMAT
     console_level = constants.DEFAULT_LOG_CONSOLE_LEVEL
     file_fmt = constants.DEFAULT_LOG_FORMAT
@@ -123,7 +128,7 @@ def setup_logging(config : configparser.ConfigParser,
         file_level = section.get("file.level", constants.DEFAULT_LOG_FILE_LEVEL)
         file_path = section.get("format.path", constants.DEFAULT_LOG_FILEPATH_FORMAT)
         file_disabled = section.getboolean("file.disabled", False)
-    
+
     if verbose:
         console_level = 'INFO'
     if debug:
@@ -135,15 +140,15 @@ def setup_logging(config : configparser.ConfigParser,
     file_path = tokens.TIME.replace_data(file_path, config['DEFAULT'].get("format.time", constants.DEFAULT_TIME_FORMAT))
     file_path = tokens.APP_NAME.replace_data(file_path)
     file_path = tokens.VERSION.replace_data(file_path)
-    
-    ch : logging.Handler = logging.StreamHandler(stream=sys.stdout)
-    ch.setFormatter( logging.Formatter(fmt = console_fmt, datefmt=datefmt) )
+
+    ch: logging.Handler = logging.StreamHandler(stream=sys.stdout)
+    ch.setFormatter(logging.Formatter(fmt=console_fmt, datefmt=datefmt))
     ch.setLevel(console_level)
     handlers.append(ch)
 
     if not file_disabled:
-        fh : logging.Handler = logging.FileHandler(os.path.join(ws.logs, file_path), 'w', 'utf-8')
-        fh.setFormatter( logging.Formatter(fmt = file_fmt, datefmt=datefmt) )
+        fh: logging.Handler = logging.FileHandler(os.path.join(ws.logs, file_path), 'w', 'utf-8')
+        fh.setFormatter(logging.Formatter(fmt=file_fmt, datefmt=datefmt))
         fh.setLevel(file_level)
         handlers.append(fh)
 
