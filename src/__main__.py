@@ -61,7 +61,7 @@ def main():
         DEFAULT_LOGGER.error(e, stack_info=True)
         return
 
-    log_path: str
+    log_path: Optional[str]
     try:
         log_path = setup_logging(config, debug, verbose, ws)
     except Exception as e:

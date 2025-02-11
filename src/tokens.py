@@ -16,14 +16,14 @@ class Token:
         self.name = name
 
     def get_label(self,
-                  begin_tag: Optional[str] = DEFAULT_BEGIN_TAG,
-                  end_tag: Optional[str] = DEFAULT_END_TAG) -> str:
+                  begin_tag: str = DEFAULT_BEGIN_TAG,
+                  end_tag: str = DEFAULT_END_TAG) -> str:
         return begin_tag + self.name + end_tag
 
     def replace(self, data: str,
                 content: str,
-                begin_tag: Optional[str] = DEFAULT_BEGIN_TAG,
-                end_tag: Optional[str] = DEFAULT_END_TAG) -> str:
+                begin_tag: str = DEFAULT_BEGIN_TAG,
+                end_tag: str = DEFAULT_END_TAG) -> str:
         return data.replace(self.get_label(begin_tag, end_tag), content)
 
 
@@ -34,8 +34,8 @@ class Single_Value_Token(Token):
         self.value = value
 
     def replace_data(self, data: str,
-                     begin_tag: Optional[str] = DEFAULT_BEGIN_TAG,
-                     end_tag: Optional[str] = DEFAULT_END_TAG) -> str:
+                     begin_tag: str = DEFAULT_BEGIN_TAG,
+                     end_tag: str = DEFAULT_END_TAG) -> str:
         return self.replace(data, self.value, begin_tag, end_tag)
 
 
@@ -47,8 +47,8 @@ class String_Token(Token):
 
     def replace_data(self, data: str,
                      input: str,
-                     begin_tag: Optional[str] = DEFAULT_BEGIN_TAG,
-                     end_tag: Optional[str] = DEFAULT_END_TAG) -> str:
+                     begin_tag: str = DEFAULT_BEGIN_TAG,
+                     end_tag: str = DEFAULT_END_TAG) -> str:
         if not input:
             self.replace(data, "", begin_tag, end_tag)
         return self.replace(data, self.func(input), begin_tag, end_tag)
@@ -57,7 +57,13 @@ class String_Token(Token):
 class Time_Token(String_Token):
 
     def __init__(self, name: str):
-        super().__init__(name, lambda s: datetime.datetime.now().strftime(s))
+        super().__init__(name, lambda s: self.get_time(s))
+
+    def get_time(self, format: Optional[str]) -> str:
+        if not format:
+            return ""
+        else:
+            return datetime.datetime.now().strftime(format)
 
 
 class Order_Token(Token):
@@ -68,8 +74,8 @@ class Order_Token(Token):
 
     def replace_order(self, data: str,
                       order: Optional[orders.Order],
-                      begin_tag: Optional[str] = DEFAULT_BEGIN_TAG,
-                      end_tag: Optional[str] = DEFAULT_END_TAG) -> str:
+                      begin_tag: str = DEFAULT_BEGIN_TAG,
+                      end_tag: str = DEFAULT_END_TAG) -> str:
         if order is None:
             self.replace(data, "", begin_tag, end_tag)
         return self.replace(data, self.func(order), begin_tag, end_tag)
@@ -83,8 +89,8 @@ class Item_Token(Token):
 
     def replace_item(self, data: str,
                      item: Optional[orders.Item],
-                     begin_tag: Optional[str] = DEFAULT_BEGIN_TAG,
-                     end_tag: Optional[str] = DEFAULT_END_TAG) -> str:
+                     begin_tag: str = DEFAULT_BEGIN_TAG,
+                     end_tag: str = DEFAULT_END_TAG) -> str:
         if item is None:
             self.replace(data, "", begin_tag, end_tag)
         return self.replace(data, self.func(item), begin_tag, end_tag)

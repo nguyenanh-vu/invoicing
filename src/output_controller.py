@@ -29,6 +29,7 @@ class Output_Controller:
     def save(self, order: orders.Order, name: str, folder: str) -> None:
         raise NotImplementedError
 
+    @staticmethod
     def get_config_title() -> str:
         raise NotImplementedError
 
@@ -47,7 +48,7 @@ class Output_Controller:
     def get_promotion_line(self, order: orders.Order, line_model: str) -> str:
 
         if order.promotion is None:
-            return None
+            return ""
         else:
             line = line_model
             line = tokens.NAME.replace(line, order.promotion.name)
@@ -57,8 +58,8 @@ class Output_Controller:
             return line
 
     def get_filename(self, name: str, order: orders.Order) -> str:
-        if "format.path" in self.config:
-            filename = self.config.get("format.path")
+        if "format.path" in self.config and self.config["format.path"]:
+            filename = self.config["format.path"]
             filename = tokens.ORDER_DATE.replace_order(filename, order)
             filename = tokens.NAME.replace(filename, name)
             filename = tokens.ORDER_ID.replace_order(filename, order)
@@ -70,8 +71,8 @@ class Output_Controller:
             return name
 
     def get_folder(self, folder: str, order: orders.Order) -> str:
-        if "format.folder.output" in self.config:
-            filename = self.config.get("format.folder.output")
+        if "format.folder.output" in self.config and self.config["format.folder.output"]:
+            filename = self.config["format.folder.output"]
             filename = tokens.ORDER_DATE.replace_order(filename, order)
             filename = tokens.ORDER_ID.replace_order(filename, order)
             filename = tokens.TODAY.replace_data(filename, self.config.get("format.date", constants.DEFAULT_DATETIME_FORMAT))
@@ -164,6 +165,7 @@ class PDFViaTex(Output_Controller):
     def get_default_model(self) -> str:
         return os.path.join(self.ws.model, DEFAULT_LATEX_MODEL_PATH)
 
+    @staticmethod
     def get_config_title() -> str:
         return "output.latex"
 
@@ -174,7 +176,7 @@ ALL = [
 
 
 def get_output_controller(config: configparser.ConfigParser, ws: workspace.Workspace) -> List[Output_Controller]:
-    res = []
+    res: List[Output_Controller] = []
     for controller in ALL:
         if config.has_section(controller.get_config_title()):
             LOGGER.info("using output controller %s", controller.__name__)

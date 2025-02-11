@@ -1,5 +1,4 @@
 import configparser
-from numbers import Number
 import os
 import logging
 
@@ -24,7 +23,7 @@ LOGGER = logging.getLogger(__name__)
 
 class Input_Item:
 
-    def __init__(self, index: int, name: str, price: Number):
+    def __init__(self, index: int, name: str, price: float):
         self.index = index
         self.name = name
         self.price = price
@@ -48,6 +47,7 @@ class Input_Controller:
     def read(self) -> List[orders.Order]:
         raise NotImplementedError
 
+    @staticmethod
     def get_config_title() -> str:
         raise NotImplementedError
 
@@ -96,17 +96,17 @@ class GoogleSheetsInput(Input_Controller):
         LOGGER.debug("successfully checked config %s", GoogleSheetsInput.get_config_title())
 
         LOGGER.debug("requesting date cell")
-        date = self.request(self.config.get("cell.date"))[0][0]
+        date = self.request(self.config["cell.date"])[0][0]
         LOGGER.debug("order date: %s", date)
 
         LOGGER.debug("requesting promotion cells")
-        promotion_name = self.request(self.config.get("cell.promotion.name"))[0][0]
-        promotion_value = self.request(self.config.get("cell.promotion.value"))[0][0]
+        promotion_name = self.request(self.config["cell.promotion.name"])[0][0]
+        promotion_value = self.request(self.config["cell.promotion.value"])[0][0]
 
         promotion: orders.Promotion
         if promotion_name and promotion_value:
             try:
-                promotion: orders.Promotion = orders.Promotion(promotion_name, int(promotion_value))
+                promotion = orders.Promotion(promotion_name, int(promotion_value))
                 LOGGER.info("order promotion %s", promotion.__str__())
             except:
                 pass
@@ -130,9 +130,9 @@ class GoogleSheetsInput(Input_Controller):
 
         for line in orders_table:
 
-            order_id_column = GoogleSheetsInput.get_column_from_letter(self.config.get("column.order_id"))
-            client_column = GoogleSheetsInput.get_column_from_letter(self.config.get("column.client"))
-            delivery_point_column = GoogleSheetsInput.get_column_from_letter(self.config.get("column.delivery_point"))
+            order_id_column = GoogleSheetsInput.get_column_from_letter(self.config["column.order_id"])
+            client_column = GoogleSheetsInput.get_column_from_letter(self.config["column.client"])
+            delivery_point_column = GoogleSheetsInput.get_column_from_letter(self.config["column.delivery_point"])
 
             if order_id_column < len(line) and client_column < len(line):
                 order_id = line[order_id_column]
@@ -170,6 +170,7 @@ class GoogleSheetsInput(Input_Controller):
         LOGGER.info("found %d orders", len(res))
         return res
 
+    @staticmethod
     def get_config_title() -> str:
         return "input.google"
 
@@ -182,7 +183,7 @@ class GoogleSheetsInput(Input_Controller):
         if not os.path.exists(credential_path):
             raise FileNotFoundError("Google OAuth2 token {} not found".format(credential_path))
 
-        creds: Credentials = None
+        creds: Credentials
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
@@ -204,6 +205,7 @@ class GoogleSheetsInput(Input_Controller):
                     token.write(creds.to_json())
         return creds
 
+    @staticmethod
     def get_column_from_letter(letter: str) -> int:
         return ord(letter.upper()[0]) - ord('A')
 
@@ -231,9 +233,9 @@ class GoogleSheetsInput(Input_Controller):
 
         price_line = self.config.getint("line.price")
         names_line = self.config.getint("line.names")
-        last_column = self.config.get("column.last")
-        consigns_column = self.config.get("column.consignes")
-        sales_column = self.config.get("column.sales")
+        last_column = self.config["column.last"]
+        consigns_column = self.config["column.consignes"]
+        sales_column = self.config["column.sales"]
 
         prices: List[str] = self.request("A{}:{}{}".format(price_line, last_column, price_line))[0]
         names: List[str] = self.request("A{}:{}{}".format(names_line, last_column, names_line))[0]
