@@ -5,13 +5,13 @@ import logging
 import sys
 from typing import List, Optional
 
-import constants
-import orders
-import input_controller
-import output_controller
-import workspace
-import tokens
-import __version__
+import invoicing.constants as constants
+import invoicing.orders as orders
+import invoicing.input_controller as input_controller
+import invoicing.output_controller as output_controller
+import invoicing.workspace as workspace
+import invoicing.tokens as tokens
+import invoicing.__version__ as __version__
 
 
 DEFAULT_LOGGER = logging.getLogger(constants.APP_NAME)
