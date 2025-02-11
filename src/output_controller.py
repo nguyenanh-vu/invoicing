@@ -63,8 +63,8 @@ class Output_Controller:
             filename = tokens.ORDER_DATE.replace_order(filename, order)
             filename = tokens.NAME.replace(filename, name)
             filename = tokens.ORDER_ID.replace_order(filename, order)
-            filename = tokens.TODAY.replace_data(filename, self.config.get("format.date", constants.DEFAULT_DATETIME_FORMAT))
-            filename = tokens.TIME.replace_data(filename, self.config.get("format.date", constants.DEFAULT_TIME_FORMAT))
+            filename = tokens.TODAY.replace_data(filename, self.config.get("format.datetime", constants.DEFAULT_DATETIME_FORMAT))
+            filename = tokens.TIME.replace_data(filename, self.config.get("format.time", constants.DEFAULT_TIME_FORMAT))
             filename = tokens.DATE.replace_data(filename, self.config.get("format.date", constants.DEFAULT_DATE_FORMAT))
             return filename
         else:
@@ -75,8 +75,8 @@ class Output_Controller:
             filename = self.config["format.folder.output"]
             filename = tokens.ORDER_DATE.replace_order(filename, order)
             filename = tokens.ORDER_ID.replace_order(filename, order)
-            filename = tokens.TODAY.replace_data(filename, self.config.get("format.date", constants.DEFAULT_DATETIME_FORMAT))
-            filename = tokens.TIME.replace_data(filename, self.config.get("format.date", constants.DEFAULT_TIME_FORMAT))
+            filename = tokens.TODAY.replace_data(filename, self.config.get("format.datetime", constants.DEFAULT_DATETIME_FORMAT))
+            filename = tokens.TIME.replace_data(filename, self.config.get("format.time", constants.DEFAULT_TIME_FORMAT))
             filename = tokens.DATE.replace_data(filename, self.config.get("format.date", constants.DEFAULT_DATE_FORMAT))
             return os.path.join(folder, filename)
         else:
