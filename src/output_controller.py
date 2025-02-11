@@ -2,7 +2,7 @@ import configparser
 import os
 import subprocess
 import logging
-from typing import List, Optional
+from typing import List
 
 import invoicing.orders as orders
 import invoicing.workspace as workspace
@@ -22,7 +22,7 @@ DEFAULT_LATEX_ITEM_LINE_MODEL = "&".join([
 
 class Output_Controller:
 
-    def __init__(self, config: Optional[configparser.SectionProxy], ws: workspace.Workspace):
+    def __init__(self, config: configparser.SectionProxy, ws: workspace.Workspace):
         self.config = config
         self.ws = ws
 
@@ -84,7 +84,7 @@ class Output_Controller:
 
 class PDFViaTex(Output_Controller):
 
-    def __init__(self, config: Optional[configparser.SectionProxy], ws: workspace.Workspace):
+    def __init__(self, config: configparser.SectionProxy, ws: workspace.Workspace):
         super().__init__(config, ws)
 
     def save(self, order: orders.Order, name: str, folder: str) -> None:
@@ -98,12 +98,8 @@ class PDFViaTex(Output_Controller):
         else:
             os.makedirs(folder_path, exist_ok=True)
 
-        if self.config is not None:
-            model = self.config.get("model.path", self.get_default_model())
-            line_model = self.config.get("model.line", DEFAULT_LATEX_ITEM_LINE_MODEL)
-        else:
-            model = self.get_default_model()
-            line_model = DEFAULT_LATEX_ITEM_LINE_MODEL
+        model = self.config.get("model.path", self.get_default_model())
+        line_model = self.config.get("model.line", DEFAULT_LATEX_ITEM_LINE_MODEL)
 
         LOGGER.debug("path to model %s", model)
         LOGGER.debug("line model: %s", line_model)
