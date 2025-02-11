@@ -1,9 +1,9 @@
 import datetime
 from typing import Callable, Optional
 
-import orders
-import constants
-import __version__
+import invoicing.orders as orders
+import invoicing.constants as constants
+import invoicing.__version__ as __version__
 
 
 DEFAULT_BEGIN_TAG = "<<"

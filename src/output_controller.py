@@ -4,10 +4,10 @@ import subprocess
 import logging
 from typing import List, Optional
 
-import orders
-import workspace
-import tokens
-import constants
+import invoicing.orders as orders
+import invoicing.workspace as workspace
+import invoicing.tokens as tokens
+import invoicing.constants as constants
 
 
 LOGGER = logging.getLogger(__name__)

@@ -3,8 +3,8 @@ import os
 
 from typing import Optional
 
-import constants
-import tokens
+import invoicing.constants as constants
+import invoicing.tokens as tokens
 
 
 class Workspace:

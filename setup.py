@@ -17,7 +17,16 @@ setup(
    url="https://github.com/nguyenanh-vu/invoicing",
    packages=['invoicing'],
    package_dir = {'invoicing': 'src'},
-   data_files = [('config', ['data/conf/conf.ini.template'])],
+   #data_files = [('config', ['data/conf/conf.ini.template'])],
+   entry_points={
+        'console_scripts': [
+            'invoicing = invoicing:cli',
+        ]
+   },
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Topic :: Utilities"
+    ],
    install_requires=["google-auth-oauthlib",
                      "google-auth-httplib2",
                      "google-api-python-client"

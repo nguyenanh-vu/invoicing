@@ -10,8 +10,8 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-import orders
-import workspace
+import invoicing.orders as orders
+import invoicing.workspace as workspace
 
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
