@@ -1,7 +1,7 @@
 __all__ = [
     "__version__",
     "cli"
-    "constants", 
+    "constants",
     "output_controller",
     "input_controller",
     "output_controller",
@@ -10,6 +10,7 @@ __all__ = [
 ]
 
 from invoicing.__main__ import main
+
 
 def cli():
     main()

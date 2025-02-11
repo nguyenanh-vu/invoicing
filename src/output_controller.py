@@ -22,19 +22,19 @@ DEFAULT_LATEX_ITEM_LINE_MODEL = "&".join([
 
 class Output_Controller:
 
-    def __init__(self, config : Optional[configparser.SectionProxy], ws : workspace.Workspace):
+    def __init__(self, config: Optional[configparser.SectionProxy], ws: workspace.Workspace):
         self.config = config
         self.ws = ws
 
-    def save(self, order : orders.Order, name : str, folder: str) -> None:
+    def save(self, order: orders.Order, name: str, folder: str) -> None:
         raise NotImplementedError
 
     def get_config_title() -> str:
         raise NotImplementedError
-        
-    def get_items_lines(self, items : List[orders.Item], line_model : str) -> str:
 
-        lines : List[str] = []
+    def get_items_lines(self, items: List[orders.Item], line_model: str) -> str:
+
+        lines: List[str] = []
         for item in items:
             data = line_model
             data = tokens.NAME.replace_item(data, item)
@@ -44,7 +44,7 @@ class Output_Controller:
             lines.append(data)
         return "\n".join(lines)
 
-    def get_promotion_line(self, order : orders.Order, line_model : str) -> str:
+    def get_promotion_line(self, order: orders.Order, line_model: str) -> str:
 
         if order.promotion is None:
             return None
@@ -56,7 +56,7 @@ class Output_Controller:
             line = tokens.AMOUNT.replace(line, str(order.promotion.percent) + "\\%")
             return line
 
-    def get_filename(self, name : str, order : orders.Order) -> str:
+    def get_filename(self, name: str, order: orders.Order) -> str:
         if "format.path" in self.config:
             filename = self.config.get("format.path")
             filename = tokens.ORDER_DATE.replace_order(filename, order)
@@ -69,7 +69,7 @@ class Output_Controller:
         else:
             return name
 
-    def get_folder(self, folder : str, order : orders.Order) -> str:
+    def get_folder(self, folder: str, order: orders.Order) -> str:
         if "format.folder.output" in self.config:
             filename = self.config.get("format.folder.output")
             filename = tokens.ORDER_DATE.replace_order(filename, order)
@@ -84,14 +84,14 @@ class Output_Controller:
 
 class PDFViaTex(Output_Controller):
 
-    def __init__(self, config : Optional[configparser.SectionProxy], ws : workspace.Workspace):
+    def __init__(self, config: Optional[configparser.SectionProxy], ws: workspace.Workspace):
         super().__init__(config, ws)
 
-    def save(self, order : orders.Order, name : str, folder: str) -> None:
+    def save(self, order: orders.Order, name: str, folder: str) -> None:
 
         LOGGER.info("generating PDF with LaTex for order %s", order.order_id)
         folder_path = self.get_folder(folder, order)
-        LOGGER.info("output folder : %s", folder_path)
+        LOGGER.info("output folder: %s", folder_path)
         if os.path.exists(folder_path):
             if not os.path.isdir(folder_path):
                 raise NotADirectoryError("output folder {} already exists and is not a folder".format(folder_path))
@@ -99,9 +99,9 @@ class PDFViaTex(Output_Controller):
             os.makedirs(folder_path, exist_ok=True)
 
         if self.config is not None:
-            model = self.config.get("model.path", self.get_default_model() )
+            model = self.config.get("model.path", self.get_default_model())
             line_model = self.config.get("model.line", DEFAULT_LATEX_ITEM_LINE_MODEL)
-        else: 
+        else:
             model = self.get_default_model()
             line_model = DEFAULT_LATEX_ITEM_LINE_MODEL
 
@@ -113,7 +113,7 @@ class PDFViaTex(Output_Controller):
         logfile = os.path.join(folder_path, filename + '.log')
         auxfile = os.path.join(folder_path, filename + '.aux')
         outfile = os.path.join(folder_path, filename + '.out')
-        LOGGER.info("output file : %s", outfile)
+        LOGGER.info("output file: %s", outfile)
 
         data = ""
 
@@ -127,19 +127,19 @@ class PDFViaTex(Output_Controller):
         with open(model, 'r') as f:
             data = f.read()
 
-        data = tokens.MODEL_FOLDER.replace(data=data, 
+        data = tokens.MODEL_FOLDER.replace(data=data,
                                            content=os.path.dirname(os.path.abspath(model)).replace("\\", "/"))
         data = tokens.CLIENT.replace_order(data, order)
         data = tokens.DELIVERY_POINT.replace_order(data, order)
         data = tokens.ORDER_DATE.replace_order(data, order)
         data = tokens.ORDER_ID.replace_order(data, order)
-        data = tokens.PROMOTION.replace(data = data, content=self.get_promotion_line(order, line_model))
+        data = tokens.PROMOTION.replace(data=data, content=self.get_promotion_line(order, line_model))
         data = tokens.TOTAL_SALES.replace_order(data, order)
         data = tokens.TO_PAY.replace_order(data, order)
         data = tokens.TOTAL_CONSIGNS.replace_order(data, order)
         data = tokens.TOTAL.replace_order(data, order)
-        data = tokens.ITEMS.replace(data = data, content = self.get_items_lines(order.items, line_model))
-        data = tokens.CONSIGNS.replace(data = data, content = self.get_items_lines(order.consigns, line_model))
+        data = tokens.ITEMS.replace(data=data, content=self.get_items_lines(order.items, line_model))
+        data = tokens.CONSIGNS.replace(data=data, content=self.get_items_lines(order.consigns, line_model))
 
         with open(infile, 'w', encoding="utf-8") as f:
             f.write(data)
@@ -154,7 +154,7 @@ class PDFViaTex(Output_Controller):
             os.unlink(auxfile)
             os.unlink(outfile)
             LOGGER.error("Error generating pdf, check %s for more information", logfile)
-            raise ValueError('Error {} executing command: {}'.format(retcode, ' '.join(cmd))) 
+            raise ValueError('Error {} executing command: {}'.format(retcode, ' '.join(cmd)))
 
         try:
             os.unlink(logfile)
@@ -177,7 +177,7 @@ ALL = [
 ]
 
 
-def get_output_controller(config : configparser.ConfigParser, ws : workspace.Workspace) -> List[Output_Controller]:
+def get_output_controller(config: configparser.ConfigParser, ws: workspace.Workspace) -> List[Output_Controller]:
     res = []
     for controller in ALL:
         if config.has_section(controller.get_config_title()):

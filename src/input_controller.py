@@ -24,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 
 class Input_Item:
 
-    def __init__(self, index : int, name : str, price : Number):
+    def __init__(self, index: int, name: str, price: Number):
         self.index = index
         self.name = name
         self.price = price
@@ -35,12 +35,12 @@ class Input_Item:
 
 class Input_Controller:
 
-    def __init__(self, input : str, config : Optional[configparser.SectionProxy], ws : workspace.Workspace):
+    def __init__(self, input: str, config: Optional[configparser.SectionProxy], ws: workspace.Workspace):
         self.input = input
         self.config = config
         self.ws = ws
 
-    def read(self, config : Optional[configparser.SectionProxy]) -> List[orders.Order]:
+    def read(self, config: Optional[configparser.SectionProxy]) -> List[orders.Order]:
         raise NotImplementedError
 
     def get_config_title() -> str:
@@ -49,7 +49,7 @@ class Input_Controller:
 
 class GoogleSheetsInput(Input_Controller):
 
-    def __init__(self, input : str, config : Optional[configparser.SectionProxy], ws : workspace.Workspace):
+    def __init__(self, input: str, config: Optional[configparser.SectionProxy], ws: workspace.Workspace):
         super().__init__(input, config, ws)
 
     def read(self) -> List[orders.Order]:
@@ -61,7 +61,7 @@ class GoogleSheetsInput(Input_Controller):
             raise e
         LOGGER.debug("successfully checked config %s", GoogleSheetsInput.get_config_title())
 
-        creds : Credentials
+        creds: Credentials
         try:
             creds = self.get_credentials()
         except Exception as e:
@@ -76,10 +76,10 @@ class GoogleSheetsInput(Input_Controller):
         promotion_name = self.request(creds, self.config.get("cell.promotion.name"))[0][0]
         promotion_value = self.request(creds, self.config.get("cell.promotion.value"))[0][0]
 
-        promotion : orders.Promotion
+        promotion: orders.Promotion
         if promotion_name and promotion_value:
             try:
-                promotion : orders.Promotion = orders.Promotion(promotion_name, int(promotion_value))
+                promotion: orders.Promotion = orders.Promotion(promotion_name, int(promotion_value))
                 LOGGER.info("order promotion %s", promotion.__str__())
             except:
                 pass
@@ -99,7 +99,7 @@ class GoogleSheetsInput(Input_Controller):
             self.config.get("line.last")
             ))
 
-        res : List[orders.Order] = []
+        res: List[orders.Order] = []
 
         for line in orders_table:
 
@@ -113,7 +113,7 @@ class GoogleSheetsInput(Input_Controller):
                 if order_id and client:
 
                     LOGGER.debug("filling order %s", order_id)
-                    order : orders.Order = orders.Order()
+                    order: orders.Order = orders.Order()
                     order.promotion = promotion
                     order.order_id = order_id
                     order.client = client
@@ -136,7 +136,7 @@ class GoogleSheetsInput(Input_Controller):
                                 order.consigns.append(item)
                             except:
                                 pass
-                    LOGGER.debug("Order %s: %s: %s: %s, %d items, %d consignes, %d total", 
+                    LOGGER.debug("Order %s: %s: %s: %s, %d items, %d consignes, %d total",
                                  order_id, client, date, promotion.__str__(),
                                  len(order.items), len(order.consigns), order.get_total_all())
                     res.append(order)
@@ -163,7 +163,7 @@ class GoogleSheetsInput(Input_Controller):
             "column.last",
             "line.names",
             "line.price",
-            "line.orders", 
+            "line.orders",
             "line.last"
         ]
 
@@ -174,7 +174,7 @@ class GoogleSheetsInput(Input_Controller):
                 LOGGER.debug("argument %s = %s", arg, self.config.get(arg))
 
     def get_credentials(self) -> Credentials:
-        
+
         credential_path = self.config.get("path.credentials", os.path.join(self.ws.key, DEFAULT_CREDENTIALS_NAME))
         token_path = self.config.get("path.token", os.path.join(self.ws.key, DEFAULT_TOKEN_NAME))
         LOGGER.debug("credential_path: %s", credential_path)
@@ -182,7 +182,7 @@ class GoogleSheetsInput(Input_Controller):
         if not os.path.exists(credential_path):
             raise FileNotFoundError("Google OAuth2 token {} not found".format(credential_path))
 
-        creds : Credentials = None
+        creds: Credentials = None
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
@@ -204,12 +204,12 @@ class GoogleSheetsInput(Input_Controller):
                     token.write(creds.to_json())
         return creds
 
-    def get_column_from_letter(letter : str) -> int:
-        return ord( letter.upper()[0] ) - ord('A')
+    def get_column_from_letter(letter: str) -> int:
+        return ord(letter.upper()[0]) - ord('A')
 
-    def request(self, creds : Credentials, range : str) -> Any:
+    def request(self, creds: Credentials, range: str) -> Any:
 
-        LOGGER.debug("requesting range : %s", range)
+        LOGGER.debug("requesting range: %s", range)
         service = build("sheets", "v4", credentials=creds, cache_discovery=False)
         # Call the Sheets API
         sheet = service.spreadsheets()
@@ -224,7 +224,7 @@ class GoogleSheetsInput(Input_Controller):
         LOGGER.debug("got result, size %d", len(values))
         return values
 
-    def read_items(self, creds : Credentials) -> tuple[List[Input_Item],List[Input_Item]]:
+    def read_items(self, creds: Credentials) -> tuple[List[Input_Item], List[Input_Item]]:
 
         items = []
         consigns = []
@@ -235,9 +235,9 @@ class GoogleSheetsInput(Input_Controller):
         consigns_column = self.config.get("column.consignes")
         sales_column = self.config.get("column.sales")
 
-        prices : List[str] = self.request(creds, "A{}:{}{}".format(price_line, last_column, price_line))[0]
-        names : List[str] = self.request(creds, "A{}:{}{}".format(names_line, last_column, names_line))[0]
-        
+        prices: List[str] = self.request(creds, "A{}:{}{}".format(price_line, last_column, price_line))[0]
+        names: List[str] = self.request(creds, "A{}:{}{}".format(names_line, last_column, names_line))[0]
+
         for i in range(GoogleSheetsInput.get_column_from_letter(consigns_column), GoogleSheetsInput.get_column_from_letter(last_column)):
             if i < len(prices) and i < len(names):
                 if names[i] and prices[i]:
@@ -254,13 +254,12 @@ class GoogleSheetsInput(Input_Controller):
         return items, consigns
 
 
-
 ALL = [
     GoogleSheetsInput
 ]
 
 
-def get_input_controller(input : str, config : configparser.ConfigParser, ws : workspace.Workspace) -> Optional[Input_Controller]:
+def get_input_controller(input: str, config: configparser.ConfigParser, ws: workspace.Workspace) -> Optional[Input_Controller]:
     for controller in ALL:
         if config.has_section(controller.get_config_title()):
             LOGGER.info("using input controller %s", controller.__name__)
