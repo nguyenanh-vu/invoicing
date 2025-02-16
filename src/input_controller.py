@@ -195,7 +195,7 @@ class GoogleSheetsInput(Input_Controller):
             LOGGER.debug("found connection token")
         # If there are no (valid) credentials available, let the user log in.
         if not found or not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
+            if found and creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
                 LOGGER.info("refreshed connection token")
             else:
