@@ -185,14 +185,16 @@ class GoogleSheetsInput(Input_Controller):
             raise FileNotFoundError("Google OAuth2 token {} not found".format(credential_path))
 
         creds: Credentials
+        found: bool = False
         # The file token.json stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
         if os.path.exists(token_path):
             creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+            found = True
             LOGGER.debug("found connection token")
         # If there are no (valid) credentials available, let the user log in.
-        if not creds or not creds.valid:
+        if not found or not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
                 LOGGER.info("refreshed connection token")
