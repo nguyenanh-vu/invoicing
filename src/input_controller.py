@@ -105,14 +105,14 @@ class GoogleSheetsInput(Input_Controller):
         LOGGER.debug("successfully checked config %s", GoogleSheetsInput.get_config_title())
 
         LOGGER.debug("requesting date cell")
-        date = self.request(self.config["cell.date"])[0][0]
+        date = self.get_cell(self.config["cell.date"])
         LOGGER.debug("order date: %s", date)
 
         LOGGER.debug("requesting promotion cells")
-        promotion_name = self.request(self.config["cell.promotion.name"])[0][0]
-        promotion_value = self.request(self.config["cell.promotion.value"])[0][0]
+        promotion_name = self.get_cell(self.config["cell.promotion.name"])
+        promotion_value = self.get_cell(self.config["cell.promotion.value"])
 
-        promotion: orders.Promotion
+        promotion: Optional[orders.Promotion] = None
         if promotion_name and promotion_value:
             try:
                 promotion = orders.Promotion(promotion_name, int(promotion_value))
@@ -240,6 +240,13 @@ class GoogleSheetsInput(Input_Controller):
         values = result.get("values", [])
         LOGGER.debug("got result, size %d", len(values))
         return values
+
+    def get_cell(self, range: str) -> Optional[str]:
+        res = self.request(range)
+        if len(res) > 0 and len(res[0]) > 0:
+            return res[0][0]
+        else:
+            return None
 
     def get_range(self, range: str) -> str:
         if not self.sheet:
