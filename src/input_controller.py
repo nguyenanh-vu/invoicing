@@ -17,6 +17,7 @@ import invoicing.workspace as workspace
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 DEFAULT_TOKEN_NAME = "token.json"
 DEFAULT_CREDENTIALS_NAME = "key.json"
+SHEET_NAME_SEP = "@"
 
 
 LOGGER = logging.getLogger(__name__)
@@ -86,6 +87,13 @@ class GoogleSheetsInput(Input_Controller):
             LOGGER.error("error checking credentials")
             raise e
         self.creds: Credentials = creds
+        input_split: List[str] = self.input.split(SHEET_NAME_SEP)
+        self.sheet: str = ""
+        if len(input_split) >= 1:
+            self.input = input_split[0]
+
+        if len(input_split) >= 2:
+            self.sheet = input_split[1]
 
     def read(self) -> List[orders.Order]:
 
@@ -222,7 +230,7 @@ class GoogleSheetsInput(Input_Controller):
 
             result = (
                 sheet.values()
-                .get(spreadsheetId=self.input, range=range)
+                .get(spreadsheetId=self.input, range=self.get_range(range))
                 .execute()
             )
         except HttpError as e:
@@ -232,6 +240,12 @@ class GoogleSheetsInput(Input_Controller):
         values = result.get("values", [])
         LOGGER.debug("got result, size %d", len(values))
         return values
+
+    def get_range(self, range: str) -> str:
+        if not self.sheet:
+            return range
+        else:
+            return self.sheet + "!" + range
 
     def read_items(self) -> tuple[List[Input_Item], List[Input_Item]]:
 
